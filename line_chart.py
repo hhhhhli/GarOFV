@@ -5,7 +5,7 @@ import os
 
 x_axis = [i for i in range(5, 100, 5)]
 x_data = [i for i in range(95, 4, -5)]
-files = ["OF_ES.txt", "OF_CP.txt", "Frame_ES.txt", "Frame_CP.txt"]
+files = ["Optical-flow_early-stop.txt", "Optical-flow_continuous-perception.txt", "Frame_early-stop.txt", "Frame_continuous-perception.txt"]
 result_dir  = "./results"
 
 # fig=plt.figure()

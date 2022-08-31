@@ -203,8 +203,8 @@ def get_frame_result(video_data, contours, standard_points, n = 5):
 
 # 主逻辑
 def video_classify(dataloader, dataloader_OF, model, Early_stop = False, Frame_optical_flag = True, \
-                txt_file = "OF_ES.txt", train_no = 0, bandwidth = 10, \
-                Early_stop_thresh = 0.8, n = 5, result_dir='./results/', frame_optical_from_csv = True):
+                txt_file = "Frame_continuous-perception.txt", train_no = 0, bandwidth = 10, \
+                Early_stop_thresh = 0.8, n = 5, result_dir='./results/', frame_optical_from_csv = False):
     result_csv = result_dir + 'Early_' + str(Early_stop) + '_Optical_' + str(Frame_optical_flag) + '.csv'
     if n==5:
         color=['#1f77b4','#ff7f01','#2ca02c','#d62728','#9467bd','#1f77b4','#ff7f01','#2ca02c','#d62728','#9467bd']
@@ -391,15 +391,15 @@ if __name__ == '__main__':
 
         if use_flow == 'True':
             if use_early_stop == 'True':
-                txt_file = "OF_ES.txt"
+                txt_file = "Optical-flow_early-stop.txt"
                 video_classify(dataloader, dataloader_OF, model, True, True, txt_file, train_no, bandwidth)
             else:
-                txt_file = "OF_CP.txt"
+                txt_file = "Optical-flow_continuous-perception.txt"
                 video_classify(dataloader, dataloader_OF, model, False, True, txt_file, train_no, bandwidth)
         else:
             if use_early_stop == 'True':
-                txt_file = "Frame_ES.txt"
+                txt_file = "Frame_early-stop.txt"
                 video_classify(dataloader, dataloader_OF, model, True, False, txt_file, train_no, bandwidth)
             else:
-                txt_file = "Frame_CP.txt"
+                txt_file = "Frame_continuous-perception.txt"
                 video_classify(dataloader, dataloader_OF, model, False, False, txt_file, train_no, bandwidth)
