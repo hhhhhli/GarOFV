@@ -1,0 +1,65 @@
+=================  2022.08.18更新  ==============================
+视频分类策略及准确率计算。
+    每帧都会根据过往图片的分类结果，计算出一个视频分类结果
+        其中，无光流：视频类别=累计识别最大张数的类别
+        有光流：视频类别=累积光流最大值的类别
+
+    Continuous Perception：
+        图片序列无限长，连续观察。只是数据集的视频长度有限，因此将最后一帧的视频结果作为该视频的类别。
+
+    Early Stop：
+        当视频序列无限长时，为了知道何时停止检测，需要设定一个停止条件，即确信此时的判断结果正确。
+        因此GarNet设定了：当过往图片分类结果中，某类>80%，即相信这个结果。
+
+    视频分类准确率=视频结果正确/总视频数。
+    对于GarNet来说，它把数据集每5个分成1组，分别作为测试集，训练了4次，取了平均，因此得到了93%这个无法整除的数字。
+
+
+
+
+
+=================  2022.08.17 第一次记录  ==============================
+******** 背景介绍 *******
+这份代码的论文是，A Continuous Perception Robotic Approach for Predicting Shapes and Visually Perceived Weights of Unseen Garments
+现在的GarNet代码是：ResNet18对训练集用triplet loss训练，使得每张图片在二维平面上尽量区分开（即每张图片的输出embedding是1*2）
+测试流程：
+1、图片分类结果计算：
+    （1）、将所有测试图片（5类10衣服3000张）输入训练好的ResNet17，输出3000*2的embedding，
+    （2）、对每类图片（600张）的二维点，用高斯核估计概率密度函数并画出置信范围（此处用到一参数bandwidth，影响高斯核的高矮胖瘦）。这里相当于注册了测试集的平均值，但我实验过注册训练集的平均值，图片测试结果反而变好了。所以这里可以不用管它，因为是别人的算法。
+    （3）、对每段视频的每帧分别读取，根据该视频的过往帧计算二维平面上的平均值作为该图片的位置，与每个类的置信范围做比较，距离最近的类即为该帧的类标签。并与真实类标签判断比较。
+2、视频结果计算：
+    （1）、Continuous Perception模式下，直到视频60帧结束，统计当前及过往帧判断出的类标签，识别正确的帧数百分比即为该段视频的识别正确率(如50/60=83.3%)。（这个模式是不会有最终的视频识别结果的，因为不断有图片输入进来，每帧都会得到一个视频预测结果）
+    （2）、Early Stop模式下，每帧计算出过往帧判断准确率后，超过某类80%（阈值可调）就提前停止（如第50帧的时候发现之前有40帧判断正确，达到80%，则停止），该类为视频标签。该视频的识别准确率即为100%或0%。
+
+我们算法的修改是，用过往偏移量累计值作为判断类别的标准，而不是过往帧识别正确的张数。
+其中我们的过往偏移量计算方法选择【光流总模长】。即只有该帧和上一帧的识别结果一致时，该帧光流值会被累计至该类别。
+    因此，（1）Continuous Perception模式下，每帧都把当前累积最大值的类标签和真值比较，得到一个”判断对/错“的结果。最后把60帧总的判断正确率作为这个视频的准确率。
+    （2）Early Stop模式下，当前总的判断正确率超过阈值80%，就停止。
+
+******** 需要做的工作：代码结构整理 *******
+目标：
+1、把我们的代码功能剥离出来，即把图片分类、过往偏移量计算、视频结果判断三模块分类。
+    （1）、对于视频结果判断模块
+        输入【当前帧的分类结果、当前帧的光流值】，
+        读取保存的【过往帧的分类结果、过往帧的光流值】
+        输出【当前帧的视频预测结果】
+    （2）、图片分类模块，输入测试图片，输出测试结果
+    （3）、过往偏移量计算，输入测试图片和上一帧图片，并输出偏移量。（现在的代码是archs.solvers.py里的Frame_optical，预先把所有帧的偏移量都计算出来，然后在视频结果判断模块中判断（c_Continuous_Perception_Length_regTrainset.py的第465行））
+2、设计测试接口，简洁传参方式
+    （1）、需要留存的测试条件选择包括，【--图片分类算法选择，--Frame_optical（用帧数判断/用过往累积值判断）--early_stop_flag，--ablation_name（测试结果保存名）】
+    （2）、需要大量传参的有，各种保存路径、变量等等。
+    （3）、各种实验需要的参数，如偏移量累积值及百分比，每帧的当前测试结果及过往准确率，Early Stop的stop frame
+
+现在的代码的运行方式：
+GarNet:
+(1)、Continuous Perception: 
+    python -B c_Test_registrateTrainset.py --early_stop_flag False --Frame_optical False --bandwidth 20 --ablation_name 101_continuous_noOF_bd020
+(2)、Early Stop: 
+    python -B c_Test_registrateTrainset.py --early_stop_flag True --Frame_optical False --bandwidth 20 --ablation_name 101_early_noOF_bd020
+Ours:
+(1)、Continuous Perception: 
+    python -B c_Test_registrateTrainset.py --early_stop_flag False --Frame_optical True --bandwidth 20 --ablation_name 101_continuous_OF_bd020
+(2)、Early Stop: 
+    python -B c_Test_registrateTrainset.py --early_stop_flag True --Frame_optical True --bandwidth 20 --ablation_name 101_early_OF_bd020
+
+
