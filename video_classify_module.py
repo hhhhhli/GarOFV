@@ -316,9 +316,9 @@ def video_classify(dataloader, dataloader_OF, model, Early_stop = False, Frame_o
 
         with open(os.path.join(result_dir, txt_file.replace('.txt', '_detail.txt')), 'a') as file1:
             if video_pred != None:
-                print ('[train]: no.',str(train_no+1).zfill(2),',bandwidth,', 100-bandwidth, ',[video_idx],',video_idx,',[Category],',label_plottings[category_idx],',[Pred],',str(label_plottings[video_pred]),',[Time],', str(time()-start_time), file=file1)
+                print ('[train]: no.',str(train_no+1).zfill(2),',bandwidth,', bandwidth, ',[video_idx],',video_idx,',[Category],',label_plottings[category_idx],',[Pred],',str(label_plottings[video_pred]),',[Time],', str(time()-start_time), file=file1)
             else:
-                print ('[train]: no.',str(train_no+1).zfill(2),',bandwidth,', 100-bandwidth, ',[video_idx],',video_idx,',[Category],',label_plottings[category_idx],',[Pred],',"None",',[Time],', str(time()-start_time), file=file1)
+                print ('[train]: no.',str(train_no+1).zfill(2),',bandwidth,', bandwidth, ',[video_idx],',video_idx,',[Category],',label_plottings[category_idx],',[Pred],',"None",',[Time],', str(time()-start_time), file=file1)
 
         ##############   计算所有视频的判断acc ##############
         # 下面要判断这个视频的预测结果，与category比较是否相同。用于计算所有视频的acc
@@ -333,7 +333,7 @@ def video_classify(dataloader, dataloader_OF, model, Early_stop = False, Frame_o
 
     video_acc = correct_video / num_video
     with open(os.path.join(result_dir, txt_file), 'a') as file0:
-        print('[train]: no.',str(train_no+1).zfill(2), ',bandwidth,', 100-bandwidth, ',category accuracy, ', acc_video[0]/total_video[0],',', acc_video[1]/total_video[1],',',acc_video[2]/total_video[2],',',acc_video[3]/total_video[3],',',acc_video[4]/total_video[4], ',', acc_video.sum()/total_video.sum(), file=file0)
+        print('[train]: no.',str(train_no+1).zfill(2), ',bandwidth,', bandwidth, ',category accuracy, ', acc_video[0]/total_video[0],',', acc_video[1]/total_video[1],',',acc_video[2]/total_video[2],',',acc_video[3]/total_video[3],',',acc_video[4]/total_video[4], ',', acc_video.sum()/total_video.sum(), file=file0)
     print('video_acc = ', video_acc)
                  
 
@@ -385,7 +385,7 @@ if __name__ == '__main__':
 
         use_flow = par.use_flow
         use_early_stop = par.use_early_stop
-        bandwidth = int(par.bandwidth)
+        bandwidth = 100 - int(par.bandwidth)
 
         # print(type(use_flow), use_early_stop, bandwidth)
 
